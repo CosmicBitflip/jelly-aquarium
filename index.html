@@ -155,7 +155,7 @@
         let formationTargets = [];
         let formationTimer = 0;
         let touchStartTime = 0;
-        let viewScale = Math.min(window.innerWidth / 800, window.innerHeight / 1200);
+        let viewScale = Math.min(window.innerWidth / 700, window.innerHeight / 1200); // Tighter for visibility
 
         const letterPositions = {
             'H': [[0,4],[2,4],[0,3],[2,3],[0,2],[1,2],[2,2],[0,1],[2,1],[0,0],[2,0]],
@@ -168,18 +168,19 @@
         };
 
         const lines = ['HAPPY', 'BDAY!'];
-        const pixelSpacingBase = 10;
-        const letterSpacingBase = 40;
-        const lineSpacingBase = 60;
+        const pixelSpacingBase = 12; // Tweak for letter spacing
+        const letterSpacingBase = 45;
+        const lineSpacingBase = 70;
         const initialOffsetYBase = 40;
         const yCenteringBase = 40;
         const zDepth = -20;
+        const textShiftX = 15; // Tweak for right shift
 
         function computeFormationTargets() {
             formationTargets = [];
             let offsetY = initialOffsetYBase * viewScale;
             lines.forEach((line) => {
-                let offsetX = - (line.length * letterSpacingBase / 2) * viewScale;
+                let offsetX = - (line.length * letterSpacingBase / 2) * viewScale + textShiftX;
                 line.split('').forEach(char => {
                     const positions = letterPositions[char.toUpperCase()] || [];
                     positions.forEach(([x, y]) => {
@@ -401,6 +402,8 @@
             if (Date.now() - touchStartTime > 1000) {
                 formationMode = !formationMode;
                 if (formationMode) formationTimer = formationDuration;
+            } else {
+                onClick(e.touches[0]); // Simulate tap for disperse
             }
             e.preventDefault(); 
         });
@@ -414,15 +417,14 @@
 
         function onResize() {
             isMobile = window.innerWidth < 600 || window.innerHeight < 600;
-            cameraZ = window.innerWidth < window.innerHeight ? 110 : 90;
+            baseCameraZ = window.innerWidth < window.innerHeight ? 110 : 90;
             camera.aspect = window.innerWidth / window.innerHeight;
-            camera.position.z = cameraZ;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             composer.setSize(window.innerWidth, window.innerHeight);
             waterMaterial.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
-            viewScale = Math.min(window.innerWidth / 800, window.innerHeight / 1200);
+            viewScale = Math.min(window.innerWidth / 700, window.innerHeight / 1200);
             createWaterBackground();
             computeFormationTargets();
             if (formationMode) {
@@ -443,9 +445,9 @@
             lastTime = time;
 
             if (formationMode) {
-                camera.position.z = THREE.MathUtils.lerp(camera.position.z, cameraZ * 1.2, 0.05);
+                camera.position.z = THREE.MathUtils.lerp(camera.position.z, baseCameraZ * 1.2, 0.05);
             } else {
-                camera.position.z = THREE.MathUtils.lerp(camera.position.z, cameraZ, 0.05);
+                camera.position.z = THREE.MathUtils.lerp(camera.position.z, baseCameraZ, 0.05);
             }
 
             waterMaterial.uniforms.time.value += dt;
@@ -456,7 +458,7 @@
                 if (formationTimer <= 0) {
                     formationMode = false;
                     jellyfishes.forEach(jelly => {
-                        jelly.velocity.add(new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(60));
+                        jelly.velocity.add(new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() * 0.5 - 0.5).normalize().multiplyScalar(60));
                     });
                 }
             }
