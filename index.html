@@ -152,7 +152,7 @@
         let formationTargets = [];
         let formationTimer = 0;
         let touchStartTime = 0;
-        let viewScale = Math.min(window.innerWidth, window.innerHeight) / 1200;
+        let viewScale = Math.min(window.innerWidth / 800, window.innerHeight / 1200);
 
         const letterPositions = {
             'H': [[0,4],[2,4],[0,3],[2,3],[0,2],[1,2],[2,2],[0,1],[2,1],[0,0],[2,0]],
@@ -269,9 +269,9 @@
                     this.velocity.set(0, 0, 0);
                 }
 
-                this.velocity.y += Math.sin(this.swimPhase) * 0.2 * scaleFactor;
-                this.velocity.x += Math.cos(this.swimPhase * 0.5) * 0.08 * scaleFactor;
-                this.velocity.z += Math.sin(this.swimPhase * 0.3) * 0.08 * scaleFactor;
+                this.velocity.y += Math.sin(this.swimPhase) * 0.3 * scaleFactor;
+                this.velocity.x += Math.cos(this.swimPhase * 0.5) * 0.12 * scaleFactor;
+                this.velocity.z += Math.sin(this.swimPhase * 0.3) * 0.12 * scaleFactor;
 
                 this.velocity.multiplyScalar(0.98);
 
@@ -303,15 +303,15 @@
                 this.group.position.y = THREE.MathUtils.clamp(this.group.position.y, -bound, bound);
                 this.group.position.z = THREE.MathUtils.clamp(this.group.position.z, -bound, bound);
 
-                if (Math.abs(this.group.position.x) > bound) {
+                if (Math.abs(this.group.position.x) >= bound) {
                     this.velocity.x *= -1;
                     this.velocity.add(new THREE.Vector3(Math.random() * 0.2 - 0.1, 0, 0).multiplyScalar(scaleFactor));
                 }
-                if (Math.abs(this.group.position.y) > bound) {
+                if (Math.abs(this.group.position.y) >= bound) {
                     this.velocity.y *= -1;
                     this.velocity.add(new THREE.Vector3(0, Math.random() * 0.2 - 0.1, 0).multiplyScalar(scaleFactor));
                 }
-                if (Math.abs(this.group.position.z) > bound) {
+                if (Math.abs(this.group.position.z) >= bound) {
                     this.velocity.z *= -1;
                     this.velocity.add(new THREE.Vector3(0, 0, Math.random() * 0.2 - 0.1).multiplyScalar(scaleFactor));
                 }
@@ -408,15 +408,15 @@
         function onResize() {
             isMobile = window.innerWidth < 600 || window.innerHeight < 600;
             scaleFactor = isMobile ? 0.5 : 1;
-            cameraZ = isMobile ? (window.innerWidth > window.innerHeight ? 100 : 120) : 80;
+            cameraZ = window.innerWidth < window.innerHeight ? 140 : 100;
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.position.z = cameraZ;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             composer.setSize(window.innerWidth, window.innerHeight);
             waterMaterial.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
-            viewScale = Math.min(window.innerWidth, window.innerHeight) / 1200;
+            viewScale = Math.min(window.innerWidth / 800, window.innerHeight / 1200);
             createWaterBackground();
             computeFormationTargets();
             if (formationMode) {
