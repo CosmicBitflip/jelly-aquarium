@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>3D Jellyfish Aquarium</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #001122; }
+        body { margin: 0; overflow: hidden; background: #001122; user-select: none; -webkit-user-select: none; }
     </style>
     <script type="importmap">
         {
@@ -25,8 +25,9 @@
         console.log("Three loaded", THREE ? "Yes" : "No");
 
         let isMobile = window.innerWidth < 600;
-        let scaleFactor = 1; // Nuked shrinking
-        let cameraZ = 80; // Dynamic below
+        let scaleFactor = 1;
+        let baseCameraZ = 80;
+        let cameraZ = baseCameraZ;
         const numJellies = 98;
         const formationDuration = 10;
         const numBubbles = 200;
@@ -39,7 +40,7 @@
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Crisp, no tank
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         document.body.appendChild(renderer.domElement);
 
         const composer = new EffectComposer(renderer);
@@ -392,12 +393,16 @@
 
         document.addEventListener('click', onClick);
 
-        document.addEventListener('touchstart', (e) => { touchStartTime = Date.now(); });
+        document.addEventListener('touchstart', (e) => { 
+            touchStartTime = Date.now(); 
+            e.preventDefault(); 
+        });
         document.addEventListener('touchend', (e) => {
             if (Date.now() - touchStartTime > 1000) {
                 formationMode = !formationMode;
                 if (formationMode) formationTimer = formationDuration;
             }
+            e.preventDefault(); 
         });
         document.addEventListener('mousedown', (e) => { touchStartTime = Date.now(); });
         document.addEventListener('mouseup', (e) => {
@@ -414,7 +419,7 @@
             camera.position.z = cameraZ;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             composer.setSize(window.innerWidth, window.innerHeight);
             waterMaterial.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
             viewScale = Math.min(window.innerWidth / 800, window.innerHeight / 1200);
@@ -436,6 +441,12 @@
             requestAnimationFrame(animate);
             const dt = Math.min((time - lastTime) / 1000, 0.01);
             lastTime = time;
+
+            if (formationMode) {
+                camera.position.z = THREE.MathUtils.lerp(camera.position.z, cameraZ * 1.2, 0.05);
+            } else {
+                camera.position.z = THREE.MathUtils.lerp(camera.position.z, cameraZ, 0.05);
+            }
 
             waterMaterial.uniforms.time.value += dt;
             updateBubbles(dt);
